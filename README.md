@@ -64,6 +64,39 @@ Example:
 
 Flash on USB or directly on M.2 SSD. I recommend `balena etcher` 
 
+### Flashing with `dd`
+
+`dd` overwrites the target without asking, so identifying the right device is the most important step.
+
+1. Find the SSD: list the disks before and after plugging it in (e.g. via a USB adapter or M.2 enclosure). The new device is the target. Prefer its stable name from `/dev/disk/by-id/`, since `sdX` names can change between calls. Always use the **whole device** (`sdb`), never a partition (`sdb1`).
+   ```bash
+   lsblk -d -o NAME,SIZE,MODEL,SERIAL,TRAN   # before and after plugging in
+   ls -l /dev/disk/by-id/ | grep -v part
+   ```
+2. Unmount any automounted partitions of the SSD:
+   ```bash
+   sudo umount /dev/sdX?* 2>/dev/null
+   ```
+3. Write the image:
+   ```bash
+   ISO=ubuntu_24.04_server_autoinstall_2026-10-20__16-05.iso
+   TARGET=/dev/disk/by-id/<your-ssd>
+   sudo dd if="$ISO" of="$TARGET" bs=4M status=progress oflag=direct conv=fsync
+   ```
+4. Verify the written data (no output means identical):
+   ```bash
+   sudo cmp -n "$(stat -c %s "$ISO")" "$ISO" "$TARGET"
+   ```
+5. Detach the SSD safely:
+   ```bash
+   udisksctl power-off -b "$TARGET"
+   ```
+
+Notes:
+- Everything on the SSD is lost.
+- Some tools afterwards warn that the backup GPT header is not at the end of the disk. The image is smaller than the SSD, so this is expected and harmless.
+- Make sure the SSD is the only disk in the target machine: the installer copies itself to RAM (`toram`) and then wipes the install disk without confirmation.
+
 
 > 🚨 **WARNING — This installer will erase the first found disk**
 >
