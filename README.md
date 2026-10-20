@@ -127,6 +127,14 @@ If you need to install packages or run first-boot setup, keep in mind cloud-init
 those steps are skipped and are *not* retried on later boots — anything that must
 survive a flaky first boot belongs in a retrying systemd unit, not in `runcmd`.
 
+# Tests
+
+`tests/run_tests.sh` checks release resolution against the real Ubuntu servers (only `SHA256SUMS` is downloaded, no ISOs), signature and checksum handling, offline behaviour, and a full build of a tiny test ISO signed with a throwaway key. It needs network access, `xorriso`, `gpg` and `gpgv`.
+
+```bash
+tests/run_tests.sh
+```
+
 # Add new ubuntu versions:
 
 Easy! Add the codename and version to the array in `generate_autoinstall_iso.sh`. Point releases need no entry, they are resolved automatically. Don't forget to make a PR :)
