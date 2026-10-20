@@ -38,23 +38,27 @@ users:
 
 ## Step 2
 
-Invoke ./generate_autoinstall_iso.sh `<flavor>` `<version>` `[tty]` `[baudrate]` in the VScode terminal.
+Invoke ./generate_autoinstall_iso.sh `<version>` `<flavor>` `[tty]` `[baudrate]` in the VScode terminal.
 
   `version`  : codename (e.g. `questing`) or numeric (e.g. `25.10`)
 
-  `flavor`   : `server` | `desktop`
+  `flavor`   : `server` | `desktop` (desktop needs 24.04 or newer: older desktop ISOs use the Ubiquity installer, which does not support autoinstall)
 
   `tty`      : serial console TTY (e.g. `ttyS2`). Omit to skip serial console redirection and use the default kernel console.
 
   `baudrate` : serial console speed (e.g. `115200n8`, default: `115200n8`)
 
+The script picks the newest point release of the given version (e.g. `24.04.5` for server, `24.04.5.1` for desktop) from the release's `SHA256SUMS`. That file is verified against the Ubuntu CD image signing key shipped in `keys/`, and the downloaded ISO is verified against it. Downloads go to a `.part` file that is resumed after an abort and only becomes the cached ISO once its checksum matches. With a cached ISO and cached `SHA256SUMS` the script also works without network access.
+
 After downloading the original iso, the patching progress will take around 2-4 minutes. 
+
+The ISO is extracted below `$TMPDIR` (default `/tmp`), which needs about the ISO's size in free space. If `/tmp` is a small RAM disk, use e.g. `TMPDIR=/var/tmp ./generate_autoinstall_iso.sh ...`.
 
 
 Example: 
-`./generate_autoinstall_iso.sh server 26.04 ttyS2` will create a timestamped ISO file in the root folder, e.g., `ubuntu_26.04_server_ttys2_autoinstall_2026-06-16__19-48.iso` 
+`./generate_autoinstall_iso.sh 26.04 server ttyS2` will create a timestamped ISO file in the root folder, e.g., `ubuntu_26.04_server_ttys2_autoinstall_2026-06-16__19-48.iso` 
 
-`./generate_autoinstall_iso.sh server 26.04` (no tty) will create e.g. `ubuntu_26.04_server_autoinstall_2026-06-16__19-48.iso` with no serial console redirection.
+`./generate_autoinstall_iso.sh 26.04 server` (no tty) will create e.g. `ubuntu_26.04_server_autoinstall_2026-06-16__19-48.iso` with no serial console redirection.
 
 ## Step 3
 
@@ -125,9 +129,13 @@ survive a flaky first boot belongs in a retrying systemd unit, not in `runcmd`.
 
 # Add new ubuntu versions:
 
-Easy! See the array in `generate_autoinstall_iso.sh` and the desired versions. Don't forget to make a PR :)
+Easy! Add the codename and version to the array in `generate_autoinstall_iso.sh`. Point releases need no entry, they are resolved automatically. Don't forget to make a PR :)
 
 ```bash
 declare -A ubuntu_releases=(
+  # codename: release version
   [questing]="25.10"
-  [reso
+  [resolute]="26.04"
+  [stonking]="26.10"
+)
+```

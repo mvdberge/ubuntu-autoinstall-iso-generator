@@ -1,1 +1,4 @@
 *.iso
+*.part
+ubuntu-*-SHA256SUMS
+ubuntu-*-SHA256SUMS.gpg
